@@ -5,6 +5,10 @@ int main(void) {
     halInit();
     chSysInit();
 
+    can_transceiver_activate();
+
+    uavcan_node_start(NULL);
+
     while (1) {
         palSetPad(GPIOA, GPIOA_LED);
         chThdSleepMilliseconds(500);
