@@ -120,9 +120,9 @@ int main(void) {
     chThdCreateStatic(quad_task_wa, sizeof(quad_task_wa), LOWPRIO, quad_task, NULL);
 
     while (1) {
-        palSetPad(GPIOA, GPIOA_LED);
+        // palSetPad(GPIOA, GPIOA_LED);
         chThdSleepMilliseconds(500);
-        palClearPad(GPIOA, GPIOA_LED);
+        // palClearPad(GPIOA, GPIOA_LED);
         chThdSleepMilliseconds(500);
     }
 }
