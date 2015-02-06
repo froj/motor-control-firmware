@@ -1,5 +1,6 @@
 #include "ch.h"
 #include "hal.h"
+#include "uavcan_node.h"
 
 int main(void) {
     halInit();
