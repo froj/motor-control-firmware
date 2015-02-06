@@ -99,7 +99,6 @@ int main(void) {
     chSysInit();
 
     pwm_setup();
-
     pwmEnableChannel(&PWMD1, 0, 0.0 * PWM_PERIOD);
     pwmEnableChannel(&PWMD1, 1, 0.0 * PWM_PERIOD);
 
@@ -110,6 +109,9 @@ int main(void) {
 
     sdStart(&SD3, NULL);
     stdout = (BaseSequentialStream*)&SD3;
+
+    can_transceiver_activate();
+    uavcan_node_start(NULL);
 
     chprintf(stdout, "boot\n");
 
