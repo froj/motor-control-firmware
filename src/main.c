@@ -1,6 +1,7 @@
 #include <ch.h>
 #include <hal.h>
 #include <chprintf.h>
+#include "uavcan_node.h"
 
 BaseSequentialStream* stdout;
 
