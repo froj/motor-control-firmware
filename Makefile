@@ -93,11 +93,13 @@ include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_stm32f3xx.mk
 include $(CHIBIOS)/test/rt/test.mk
 include $(CHIBIOS)/os/various/cpp_wrappers/chcpp.mk
 
+# must be defined before board.mk include
+# USE_BOOTLOADER = yes
 include board/board.mk
 include src/src.mk
 
 # Define linker script file here
-LDSCRIPT = board/board.ld
+LDSCRIPT = $(BOARDLDSCRIPT)
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -170,7 +172,7 @@ AR   = $(TRGT)ar
 OD   = $(TRGT)objdump
 SZ   = $(TRGT)size
 HEX  = $(CP) -O ihex
-BIN  = $(CP) -O binary
+BIN  = $(CP) -O binary -j startup -j constructors -j destructors -j .text -j .ARM.extab -j .ARM.exidx -j .eh_frame_hdr -j .eh_frame -j .textalign -j .data
 
 # ARM-specific options here
 AOPT =
@@ -193,9 +195,10 @@ CPPWARN = -Wall -Wextra
 #
 
 # List all user C define here, like -D_DEBUG=1
-UDEFS = -DUAVCAN_STM32_CHIBIOS=1 \
-		-DUAVCAN_STM32_TIMER_NUMBER=7 \
-		-DUAVCAN_STM32_NUM_IFACES=1
+UDEFS  = $(BOARDDEFS)
+UDEFS += -DUAVCAN_STM32_CHIBIOS=1 \
+		 -DUAVCAN_STM32_TIMER_NUMBER=7 \
+		 -DUAVCAN_STM32_NUM_IFACES=1
 
 # Define ASM defines here
 UADEFS =
@@ -228,3 +231,21 @@ $(info $(shell $(LIBUAVCAN_DSDLC) $(UAVCAN_DSDL_DIR)))
 RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk
 -include tools.mk
+
+.PHONY: packager
+packager:
+	python packager/packager.py
+
+CMakeLists.txt: package.yml
+	python packager/packager.py
+
+src/src.mk: package.yml
+	python packager/packager.py
+
+.PHONY: tests
+tests: CMakeLists.txt
+	@mkdir -p build/tests
+	@cd build/tests; \
+	cmake ../..; \
+	make ; \
+	./tests;

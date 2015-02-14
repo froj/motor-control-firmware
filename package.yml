@@ -1,0 +1,18 @@
+dependency-dir: ./src/
+
+target.arm:
+    - src/main.c
+    - src/blocking_uart_driver.c
+    - src/control.c
+    - src/encoder.c
+    - src/motor_pwm.c
+    - src/analog.c
+    - src/uavcan_node.cpp
+
+depends:
+    - pid
+
+#tests:
+
+templates:
+    Makefile.include.jinja: src/src.mk
