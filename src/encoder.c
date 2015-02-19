@@ -50,7 +50,7 @@ static THD_FUNCTION(encoder_speed_task, arg)
 
         encoder_speed = filter_iir_apply(&speed_filter,
                     (float)((int16_t)(encoder_new - encoder_old))
-                    * 10000 / (uint32_t)delta_time);
+                    * 10000 / 20);
 
         chThdSleepMicroseconds(1000000.f / ENCODER_SPEED_FREQUENCY);
     }
@@ -73,8 +73,8 @@ void encoder_init_primary(void)
     STM32_TIM4->ARR    = 0xFFFF;
     STM32_TIM4->CR1    = 1;                         // start
 
-    static THD_WORKING_AREA(encoder_speed_wa, 256);
-    chThdCreateStatic(encoder_speed_wa, sizeof(encoder_speed_wa), HIGHPRIO, encoder_speed_task, NULL);
+    //static THD_WORKING_AREA(encoder_speed_wa, 256);
+    //chThdCreateStatic(encoder_speed_wa, sizeof(encoder_speed_wa), HIGHPRIO, encoder_speed_task, NULL);
 }
 
 void encoder_init_secondary(void)

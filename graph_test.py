@@ -77,7 +77,7 @@ class RingBufferFull(RingBuffer):
 
 
 class PlotVar:
-    def __init__(self, plot, name=None, maxhist=1000):
+    def __init__(self, plot, name=None, maxhist=10000):
         self.name = name
         self.maxhist = maxhist
         self.buffer = RingBuffer(maxhist)
@@ -91,7 +91,7 @@ class PlotVar:
 
 
 class Plot:
-    def __init__(self, window, name='noname', histlen=1000):
+    def __init__(self, window, name='noname', histlen=10000):
         self.plt = window.addPlot(title=name)
         self.histlen = 100
         self.maxhistlen = histlen
@@ -156,11 +156,11 @@ class DatagramRcv(QtCore.QThread):
             data = msgpack.unpackb(dtgrm)
             # print(data)
             if 'i' in data:
-                p2.lines[0].updateData(data['motor_current'])
+                p1.lines[0].updateData(data['i'])
             if 'u' in data:
-                p2.lines[0].updateData(data['motor_voltage'])
+                p2.lines[0].updateData(data['u'])
             if 's' in data:
-                p1.lines[0].updateData(data['speed'])
+                p3.lines[0].updateData(data['s'])
 
 
 if len(sys.argv) > 2:

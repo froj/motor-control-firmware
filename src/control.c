@@ -80,10 +80,10 @@ static THD_FUNCTION(control_loop, arg)
     pid_set_frequency(&current_pid, 1000.f);
 
     static zero_crossing_filter_t zero_crossing_filter;
-    zero_crossing_filter_init(&zero_crossing_filter, 10);
+    zero_crossing_filter_init(&zero_crossing_filter, 100);
 
     while (42) {
-        float current_setpt = -0.150;     // Amps
+        float current_setpt = -0.0;     // Amps
         if (analog_get_battery_voltage() < LOW_BATT_TH) {
             pid_reset_integral(&current_pid);
         }
