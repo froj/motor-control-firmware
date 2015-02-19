@@ -74,7 +74,7 @@ void encoder_init_primary(void)
     STM32_TIM4->CR1    = 1;                         // start
 
     static THD_WORKING_AREA(encoder_speed_wa, 256);
-    chThdCreateStatic(encoder_speed_wa, sizeof(encoder_speed_wa), LOWPRIO, encoder_speed_task, NULL);
+    chThdCreateStatic(encoder_speed_wa, sizeof(encoder_speed_wa), HIGHPRIO, encoder_speed_task, NULL);
 }
 
 void encoder_init_secondary(void)

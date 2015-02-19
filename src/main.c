@@ -33,19 +33,18 @@ static THD_FUNCTION(stream_task, arg)
         cmp_mem_access_init(&cmp, &mem, dtgrm, sizeof(dtgrm));
         bool err = false;
         err = err || !cmp_write_map(&cmp, 3);
-        const char *current_id = "motor_current";
+        const char *current_id = "i";
         err = err || !cmp_write_str(&cmp, current_id, strlen(current_id));
         err = err || !cmp_write_float(&cmp, analog_get_motor_current());
-        const char *motor_voltage_id = "motor_voltage";
+        const char *motor_voltage_id = "u";
         err = err || !cmp_write_str(&cmp, motor_voltage_id, strlen(motor_voltage_id));
         err = err || !cmp_write_float(&cmp, control_get_motor_voltage());
-        const char *batt_voltage_id = "batt_voltage";
-        err = err || !cmp_write_str(&cmp, batt_voltage_id, strlen(batt_voltage_id));
-        err = err || !cmp_write_float(&cmp, analog_get_battery_voltage());
+        const char *encoder_speed_id = "s";
+        err = err || !cmp_write_str(&cmp, encoder_speed_id, strlen(encoder_speed_id));
+        err = err || !cmp_write_float(&cmp, encoder_get_speed());
         if (!err) {
             serial_datagram_send(dtgrm, cmp_mem_access_get_pos(&mem), _stream_sndfn, stdout);
         }
-        chThdSleepMilliseconds(10);
     }
     return 0;
 }
