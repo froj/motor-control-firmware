@@ -25,17 +25,45 @@ float analog_get_auxiliary(void)
     return aux_in;
 }
 
+static void adc_callback(ADCDriver *adcp, adcsample_t *adc_samples, size_t n)
+{
+    (void)adcp;
+    (void)n;
+
+    static filter_iir_t current_filter;
+    // scipy.signal.butter(3, 0.1)
+
+
+    static const float b[] = {0.01, 0.0};
+    static const float a[] = {-0.99};
+
+    static float current_filter_buffer[1];
+
+    static bool initialized = false;
+
+    if (!initialized) {
+        filter_iir_init(&current_filter, b, a, 1, current_filter_buffer);
+        initialized = true;
+    }
+
+    motor_current = filter_iir_apply(&current_filter,
+            (- (adc_samples[1] - ADC_MAX / 2) * ADC_TO_AMPS));
+
+    battery_voltage = adc_samples[3] * ADC_TO_VOLTS;
+    aux_in = (float)(adc_samples[0] + adc_samples[2])/(ADC_MAX*2);
+}
+
 static THD_FUNCTION(adc_task, arg)
 {
     (void)arg;
     chRegSetThreadName("adc read");
     static adcsample_t adc_samples[4];
     static const ADCConversionGroup adcgrpcfg1 = {
-        FALSE,                  // circular?
+        TRUE,                   // circular?
         4,                      // nb channels
-        NULL,                   // callback fn
+        adc_callback,           // callback fn
         NULL,                   // error callback fn
-        0,                      // CFGR
+        ADC_CFGR_CONT,          // CFGR : continuous mode
         0,                      // TR1
         6,                      // CCR : DUAL=regualar,simultaneous
         {ADC_SMPR1_SMP_AN1(0), 0},                          // SMPRx : sample time minimum
@@ -44,35 +72,11 @@ static THD_FUNCTION(adc_task, arg)
         {ADC_SQR1_NUM_CH(2) | ADC_SQR1_SQ1_N(2) | ADC_SQR1_SQ2_N(3), 0, 0, 0}, // SSQRx : ADC2_CH2, ADC2_CH3
     };
 
-    filter_iir_t current_filter;
-    // scipy.signal.butter(3, 0.1)
-
-
-    const float b[] = {0.01, 0.0};
-    const float a[] = {-0.99};
-
-    float current_filter_buffer[1];
-
-    filter_iir_init(&current_filter, b, a, 1, current_filter_buffer);
 
     adcStart(&ADCD1, NULL);
 
-    while (1) {
-        adcConvert(&ADCD1, &adcgrpcfg1, adc_samples, 1);
+    adcConvert(&ADCD1, &adcgrpcfg1, adc_samples, 1); // should never return
 
-        motor_current = filter_iir_apply(&current_filter,
-                (- (adc_samples[1] - ADC_MAX / 2) * ADC_TO_AMPS));
-
-        // motor_current = - (adc_samples[1] - ADC_MAX / 2) * ADC_TO_AMPS;
-
-        // float filter_alpha = 0.02;
-        // motor_current = motor_current * (1-filter_alpha)
-        //     + (- (adc_samples[1] - ADC_MAX / 2) * ADC_TO_AMPS) * filter_alpha;
-
-        battery_voltage = adc_samples[3] * ADC_TO_VOLTS;
-        aux_in = (float)(adc_samples[0] + adc_samples[2])/(ADC_MAX*2);
-        chThdSleepMicroseconds(100);
-    }
     return 0;
 }
 
