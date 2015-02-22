@@ -1,6 +1,6 @@
 [submodule "ChibiOS"]
 	path = ChibiOS
-	url = https://github.com/ChibiOS/ChibiOS.git
+	url = https://github.com/cvra/ChibiOS.git
 [submodule "packager"]
 	path = packager
 	url = https://github.com/cvra/packager.git
@@ -25,3 +25,6 @@
 [submodule "src/crc"]
 	path = src/crc
 	url = https://github.com/cvra/crc
+[submodule "src/parameter"]
+	path = src/parameter
+	url = https://github.com/Stapelzeiger/parameter

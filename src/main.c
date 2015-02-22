@@ -8,10 +8,12 @@
 #include "encoder.h"
 #include "cmp_mem_access/cmp_mem_access.h"
 #include "serial-datagram/serial_datagram.h"
+#include "parameter/parameter.h"
+#include "parameter/parameter_msgpack.h"
 #include <string.h>
 
 BaseSequentialStream* stdout;
-
+parameter_namespace_t parameter_root_ns;
 
 
 static void _stream_sndfn(void *arg, const void *p, size_t len)
@@ -51,6 +53,28 @@ static THD_FUNCTION(stream_task, arg)
 }
 
 
+static void parameter_decode_cb(const void *dtgrm, size_t len)
+{
+    int ret = parameter_msgpack_read(&parameter_root_ns, (char*)dtgrm, len);
+    chprintf(stdout, "ok %d\n", ret);
+    // parameter_print(&parameter_root_ns);
+}
+
+static THD_WORKING_AREA(parameter_listener_wa, 512);
+static THD_FUNCTION(parameter_listener, arg)
+{
+    static char rcv_buf[200];
+    static serial_datagram_rcv_handler_t rcv_handler;
+    serial_datagram_rcv_handler_init(&rcv_handler, &rcv_buf, sizeof(rcv_buf), parameter_decode_cb);
+    while (1) {
+        char c = chSequentialStreamGet((BaseSequentialStream*)arg);
+        int ret = serial_datagram_receive(&rcv_handler, &c, 1);
+        (void)ret; // ingore errors
+    }
+    return 0;
+}
+
+
 void panic_hook(const char* reason)
 {
     palClearPad(GPIOA, GPIOA_LED);      // turn on LED (active low)
@@ -66,6 +90,51 @@ void panic_hook(const char* reason)
     }
 }
 
+
+static int error_level = 0;
+
+static THD_WORKING_AREA(led_thread_wa, 128);
+static THD_FUNCTION(led_thread, arg)
+{
+    while (1) {
+        if (analog_get_battery_voltage() < 12.f) {
+            palClearPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(40);
+            palSetPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(40);
+
+            palClearPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(40);
+            palSetPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(40);
+
+            palClearPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(40);
+            palSetPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(40);
+
+            palClearPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(40);
+            palSetPad(GPIOA, GPIOA_LED);
+
+            chThdSleepMilliseconds(720);
+        } else if (error_level) {
+            palClearPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(80);
+            palSetPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(80);
+        } else {
+            palClearPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(80);
+            palSetPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(80);
+            palClearPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(80);
+            palSetPad(GPIOA, GPIOA_LED);
+            chThdSleepMilliseconds(760);
+        }
+    }
+}
 
 int main(void) {
     halInit();
@@ -85,7 +154,9 @@ int main(void) {
 
     chprintf(stdout, "boot\n");
 
-    chThdCreateStatic(stream_task_wa, sizeof(stream_task_wa), LOWPRIO, stream_task, NULL);
+    // chThdCreateStatic(stream_task_wa, sizeof(stream_task_wa), LOWPRIO, stream_task, NULL);
+    chThdCreateStatic(parameter_listener_wa, sizeof(parameter_listener_wa), LOWPRIO, parameter_listener, &SD3);
+    chThdCreateStatic(led_thread_wa, sizeof(led_thread_wa), LOWPRIO, led_thread, NULL);
 
     while (1) {
         palSetPad(GPIOA, GPIOA_LED);
