@@ -22,5 +22,6 @@
 -IChibiOS/os/rt/ports/ARMCMx/compilers/GCC
 -IChibiOS/test/rt
 -IChibiOS/os/various
+-IChibiOS/os/hal/lib/streams
 -I./src
 -I./board
