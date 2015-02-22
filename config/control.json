@@ -1,0 +1,18 @@
+{
+    "loop_freq": 1000, # Hz
+    "position": {
+        "kp": 0,
+        "ki": 0,
+        "kd": 0
+    },
+    "velocity": {
+        "kp": 0.0000,
+        "ki": 0,
+        "kd": 0
+    },
+    "current": {
+        "kp": 20,
+        "ki": 20,
+        "kd": 0
+    }
+}
