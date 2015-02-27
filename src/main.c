@@ -23,8 +23,8 @@ static void _stream_sndfn(void *arg, const void *p, size_t len)
     }
 }
 
-static THD_WORKING_AREA(stream_task_wa, 256);
-static THD_FUNCTION(stream_task, arg)
+static WORKING_AREA(stream_task_wa, 256);
+static msg_t stream_task(void *arg)
 {
     (void)arg;
     chRegSetThreadName("print data");
@@ -60,8 +60,8 @@ static void parameter_decode_cb(const void *dtgrm, size_t len)
     // parameter_print(&parameter_root_ns);
 }
 
-static THD_WORKING_AREA(parameter_listener_wa, 512);
-static THD_FUNCTION(parameter_listener, arg)
+static WORKING_AREA(parameter_listener_wa, 512);
+static msg_t parameter_listener(void *arg)
 {
     static char rcv_buf[200];
     static serial_datagram_rcv_handler_t rcv_handler;
@@ -75,7 +75,7 @@ static THD_FUNCTION(parameter_listener, arg)
 }
 
 
-void panic_hook(const char* reason)
+void panic_hook()
 {
     palClearPad(GPIOA, GPIOA_LED);      // turn on LED (active low)
     static BlockingUARTDriver blocking_uart_stream;
@@ -86,15 +86,15 @@ void panic_hook(const char* reason)
         for(i = 10000000; i>0; i--){
             __asm__ volatile ("nop");
         }
-        chprintf(uart, "Panic: %s\n", reason);
+        chprintf(uart, "Panic at the disco!\n");
     }
 }
 
 
 static int error_level = 0;
 
-static THD_WORKING_AREA(led_thread_wa, 128);
-static THD_FUNCTION(led_thread, arg)
+static WORKING_AREA(led_thread_wa, 128);
+static msg_t led_thread(void *arg)
 {
     while (1) {
         if (analog_get_battery_voltage() < 12.f) {

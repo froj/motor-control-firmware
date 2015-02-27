@@ -51,18 +51,6 @@ endif
 # Architecture or project specific options
 #
 
-# Stack size to be allocated to the Cortex-M process stack. This stack is
-# the stack used by the main() thread.
-ifeq ($(USE_PROCESS_STACKSIZE),)
-  USE_PROCESS_STACKSIZE = 0x400
-endif
-
-# Stack size to the allocated to the Cortex-M main/exceptions stack. This
-# stack is used for processing interrupts and exceptions.
-ifeq ($(USE_EXCEPTIONS_STACKSIZE),)
-  USE_EXCEPTIONS_STACKSIZE = 0x400
-endif
-
 # Enables the use of FPU on Cortex-M4 (no, softfp, hard).
 ifeq ($(USE_FPU),)
   USE_FPU = hard
@@ -81,20 +69,17 @@ PROJECT = motor-control-firmware
 
 # Imported source files and paths
 CHIBIOS = ChibiOS
+include $(CHIBIOS)/os/hal/platforms/STM32F30x/platform.mk
 include $(CHIBIOS)/os/hal/hal.mk
-include $(CHIBIOS)/os/hal/ports/STM32/STM32F3xx/platform.mk
-include $(CHIBIOS)/os/hal/osal/rt/osal.mk
-include $(CHIBIOS)/os/rt/rt.mk
-include $(CHIBIOS)/os/rt/ports/ARMCMx/compilers/GCC/mk/port_stm32f3xx.mk
-include $(CHIBIOS)/test/rt/test.mk
+include $(CHIBIOS)/os/ports/GCC/ARMCMx/STM32F3xx/port.mk
+include $(CHIBIOS)/os/kernel/kernel.mk
 
-# must be defined before board.mk include
 USE_BOOTLOADER = yes
 include board/board.mk
 include src/src.mk
 
 # Define linker script file here
-LDSCRIPT = $(BOARDLDSCRIPT)
+LDSCRIPT= $(BOARDLDSCRIPT)
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -102,13 +87,13 @@ CSRC = $(PORTSRC) \
        $(KERNSRC) \
        $(TESTSRC) \
        $(HALSRC) \
-       $(OSALSRC) \
        $(PLATFORMSRC) \
-       $(CHIBIOS)/os/hal/lib/streams/chprintf.c \
-       $(CHIBIOS)/os/hal/lib/streams/memstreams.c \
-       $(CHIBIOS)/os/various/shell.c \
+	   $(CHIBIOS)/os/various/chprintf.c \
+	   $(CHIBIOS)/os/various/memstreams.c \
+	   $(CHIBIOS)/os/various/shell.c \
+	   $(CHIBIOS)/ \
        $(BOARDSRC) \
-       $(PROJCSRC)
+	   $(PROJCSRC)
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -138,8 +123,8 @@ TCPPSRC =
 ASMSRC = $(PORTASM)
 
 INCDIR = $(PORTINC) $(KERNINC) $(TESTINC) \
-         $(HALINC) $(OSALINC) $(PLATFORMINC) $(BOARDINC) \
-         $(CHIBIOS)/os/various $(CHIBIOS)/os/hal/lib/streams ./src
+         $(HALINC) $(PLATFORMINC) $(BOARDINC) \
+         $(CHIBIOS)/os/various ./src 
 
 #
 # Project, sources and paths
@@ -162,7 +147,6 @@ LD   = $(TRGT)gcc
 #LD   = $(TRGT)g++
 CP   = $(TRGT)objcopy
 AS   = $(TRGT)gcc -x assembler-with-cpp
-AR   = $(TRGT)ar
 OD   = $(TRGT)objdump
 SZ   = $(TRGT)size
 HEX  = $(CP) -O ihex
@@ -182,6 +166,29 @@ CPPWARN = -Wall -Wextra
 
 #
 # Compiler settings
+##############################################################################
+
+##############################################################################
+# Start of default section
+#
+
+# List all default C defines here, like -D_DEBUG=1
+DDEFS =
+
+# List all default ASM defines here, like -D_DEBUG=1
+DADEFS =
+
+# List all default directories to look for include files here
+DINCDIR =
+
+# List the default directory to look for the libraries here
+DLIBDIR =
+
+# List all default libraries here
+DLIBS =
+
+#
+# End of default section
 ##############################################################################
 
 ##############################################################################
@@ -207,7 +214,7 @@ ULIBS =
 # End of user defines
 ##############################################################################
 
-RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
+RULESPATH = $(CHIBIOS)/os/ports/GCC/ARMCMx
 include $(RULESPATH)/rules.mk
 -include tools.mk
 

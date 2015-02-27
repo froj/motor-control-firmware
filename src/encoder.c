@@ -22,7 +22,7 @@ float encoder_get_speed(void)
     return encoder_speed;
 }
 
-static THD_FUNCTION(encoder_speed_task, arg)
+static msg_t encoder_speed_task(void *arg)
 {
     (void)arg;
     chRegSetThreadName("Encoder speed");
@@ -38,14 +38,14 @@ static THD_FUNCTION(encoder_speed_task, arg)
     uint16_t encoder_old;
     uint16_t encoder_new;
     systime_t delta_time = 0;       // in 0.1 ms steps :(
-    systime_t time = chVTGetSystemTimeX();
+    systime_t time = chTimeNow();
 
     encoder_new = encoder_get_primary();
 
     while (42) {
         encoder_old = encoder_new;
         encoder_new = encoder_get_primary();
-        delta_time = chVTGetSystemTimeX() - time;
+        delta_time = chTimeNow() - time;
         time += delta_time;
 
         encoder_speed = filter_iir_apply(&speed_filter,
@@ -73,7 +73,7 @@ void encoder_init_primary(void)
     STM32_TIM4->ARR    = 0xFFFF;
     STM32_TIM4->CR1    = 1;                         // start
 
-    static THD_WORKING_AREA(encoder_speed_wa, 256);
+    static WORKING_AREA(encoder_speed_wa, 256);
     chThdCreateStatic(encoder_speed_wa, sizeof(encoder_speed_wa), LOWPRIO, encoder_speed_task, NULL);
 }
 

@@ -93,7 +93,7 @@ static const PWMConfig pwm_cfg = {
 void motor_pwm_setup(void)
 {
     pwmStart(&PWMD1, &pwm_cfg);
-    pwmEnablePeriodicNotification(&PWMD1);
+    //pwmEnablePeriodicNotification(&PWMD1);
 }
 
 void motor_pwm_set(float dc)

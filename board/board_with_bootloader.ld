@@ -10,4 +10,4 @@ MEMORY
     ccmram : org = 0x10000000, len = 8k
 }
 
-INCLUDE ChibiOS/os/common/ports/ARMCMx/compilers/GCC/rules.ld
+INCLUDE ChibiOS/os/ports/GCC/ARMCMx/STM32F3xx/ld/STM32F303xC.ld

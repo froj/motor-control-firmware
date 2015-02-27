@@ -79,7 +79,7 @@ static struct pid_param_s pos_pid_params;
 static struct pid_param_s vel_pid_params;
 static struct pid_param_s cur_pid_params;
 
-static THD_FUNCTION(control_loop, arg)
+static msg_t control_loop(void *arg)
 {
     (void)arg;
     chRegSetThreadName("Control Loop");
@@ -170,7 +170,7 @@ void control_start(void)
     pid_param_declare(&vel_pid_params, &param_ns_vel_ctrl);
     pid_param_declare(&cur_pid_params, &param_ns_cur_ctrl);
 
-    static THD_WORKING_AREA(control_loop_wa, 256);
+    static WORKING_AREA(control_loop_wa, 256);
     chThdCreateStatic(control_loop_wa, sizeof(control_loop_wa), HIGHPRIO, control_loop, NULL);
 }
 

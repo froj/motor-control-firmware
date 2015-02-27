@@ -26,7 +26,7 @@
 /*
  * MCU type as defined in the ST header.
  */
-#define STM32F303xC
+#define STM32F30X
 
 /*
  * IO pins assignments.

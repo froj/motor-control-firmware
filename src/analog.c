@@ -48,7 +48,7 @@ static void adc_callback(ADCDriver *adcp, adcsample_t *adc_samples, size_t n)
     aux_in = (float)(adc_samples[0] + adc_samples[2])/(ADC_MAX*2);
 }
 
-static THD_FUNCTION(adc_task, arg)
+static msg_t adc_task(void *arg)
 {
     (void)arg;
     chRegSetThreadName("adc read");
@@ -79,6 +79,6 @@ static THD_FUNCTION(adc_task, arg)
 
 void analog_init(void)
 {
-    static THD_WORKING_AREA(adc_task_wa, 256);
+    static WORKING_AREA(adc_task_wa, 256);
     chThdCreateStatic(adc_task_wa, sizeof(adc_task_wa), HIGHPRIO, adc_task, NULL);
 }
