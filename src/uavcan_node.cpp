@@ -6,6 +6,7 @@
 #include <cvra/Reboot.hpp>
 #include <cvra/motor/control/Velocity.hpp>
 #include <cvra/motor/feedback/MotorEncoderPosition.hpp>
+#include <cvra/motor/feedback/MotorPosition.hpp>
 #include <control.h>
 #include <encoder.h>
 #include "uavcan_node.h"
@@ -94,6 +95,13 @@ static THD_FUNCTION(uavcan_node, arg)
         uavcan_failure("cvra::motor::feedback::MotorEncoderPosition publisher");
     }
 
+    uavcan::Publisher<cvra::motor::feedback::MotorPosition> pos_pub(node);
+    const int pos_pub_init_res = pos_pub.init();
+    if (pos_pub_init_res < 0)
+    {
+        uavcan_failure("cvra::motor::feedback::MotorPosition publisher");
+    }
+
 
     node.setStatusOk();
 
@@ -107,6 +115,11 @@ static THD_FUNCTION(uavcan_node, arg)
         cvra::motor::feedback::MotorEncoderPosition enc_pos;
         enc_pos.raw_encoder_position = encoder_get_secondary();
         enc_pos_pub.broadcast(enc_pos);
+
+        cvra::motor::feedback::MotorPosition pos;
+        pos.position = control_get_position();
+        pos.speed = control_get_velocity();
+        pos_pub.broadcast(pos);
 
     }
     return 0;
