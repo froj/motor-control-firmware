@@ -1,13 +1,16 @@
 #include <ch.h>
 #include <hal.h>
+#include <main.h>
 #include <uavcan/uavcan.hpp>
 #include <uavcan_stm32/uavcan_stm32.hpp>
 #include <uavcan/protocol/NodeStatus.hpp>
 #include <cvra/Reboot.hpp>
 #include <cvra/motor/control/Velocity.hpp>
 #include <cvra/motor/feedback/MotorEncoderPosition.hpp>
+#include <cvra/motor/config/CurrentPID.hpp>
 #include <control.h>
 #include <encoder.h>
+#include <parameter/parameter.h>
 #include "uavcan_node.h"
 #include <can-bootloader/boot_arg.h>
 
@@ -54,6 +57,8 @@ static THD_FUNCTION(uavcan_node, arg)
     }
 
     /* Subscribers */
+
+    /** Reboot */
     uavcan::Subscriber<cvra::Reboot> reboot_sub(node);
     int ret = reboot_sub.start(
         [&](const uavcan::ReceivedDataStructure<cvra::Reboot>& msg)
@@ -71,10 +76,12 @@ static THD_FUNCTION(uavcan_node, arg)
             }
         }
     );
+
     if (ret != 0) {
         uavcan_failure("cvra::Reboot subscriber");
     }
 
+    /** Velocity Control */
     uavcan::Subscriber<cvra::motor::control::Velocity> vel_ctrl_sub(node);
     ret = vel_ctrl_sub.start(
         [&](const uavcan::ReceivedDataStructure<cvra::motor::control::Velocity>& msg)
@@ -87,11 +94,29 @@ static THD_FUNCTION(uavcan_node, arg)
     }
 
     /* Publishers */
+
+    /** Raw Motor Encoder Position */
     uavcan::Publisher<cvra::motor::feedback::MotorEncoderPosition> enc_pos_pub(node);
     const int enc_pos_pub_init_res = enc_pos_pub.init();
-    if (enc_pos_pub_init_res < 0)
-    {
+    if (enc_pos_pub_init_res < 0) {
         uavcan_failure("cvra::motor::feedback::MotorEncoderPosition publisher");
+    }
+
+
+    /* Servers */
+
+    /** Current PID config */
+    uavcan::ServiceServer<cvra::motor::config::CurrentPID> current_pid_srv(node);
+    const int current_pid_srv_res = current_pid_srv.start(
+        [&](const uavcan::ReceivedDataStructure<cvra::motor::config::CurrentPID::Request>& req,
+            cvra::motor::config::CurrentPID::Response& rsp)
+        {
+            (void) rsp;
+            parameter_scalar_set(parameter_find(&parameter_root_ns, "/control/current/kp"), req.pid.kp);
+        });
+
+    if (current_pid_srv_res < 0) {
+        uavcan_failure("cvra::motor::config::CurrentPID server");
     }
 
 
