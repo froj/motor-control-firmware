@@ -37,29 +37,18 @@ static THD_FUNCTION(stream_task, arg)
     while (1) {
         cmp_mem_access_init(&cmp, &mem, dtgrm, sizeof(dtgrm));
         bool err = false;
-        err = err || !cmp_write_map(&cmp, 3);
-        const char *enc_id = "enc";
+        err = err || !cmp_write_map(&cmp, 2);
+        const char *enc_id = "I";
         err = err || !cmp_write_str(&cmp, enc_id, strlen(enc_id));
-        err = err || !cmp_write_u32(&cmp, encoder_get_primary());
-        const char *pos_id = "pos";
+        err = err || !cmp_write_u32(&cmp, analog_get_motor_current());
+        const char *pos_id = "U";
         err = err || !cmp_write_str(&cmp, pos_id, strlen(pos_id));
-        err = err || !cmp_write_float(&cmp, control_get_position());
-        const char *vel_id = "vel";
-        err = err || !cmp_write_str(&cmp, vel_id, strlen(vel_id));
-        err = err || !cmp_write_float(&cmp, control_get_velocity());
-        // const char *batt_voltage_id = "batt_voltage";
-        // err = err || !cmp_write_str(&cmp, batt_voltage_id, strlen(batt_voltage_id));
-        // err = err || !cmp_write_float(&cmp, analog_get_battery_voltage());
-        //const char *velocity_id = "velocity";
-        //err = err || !cmp_write_str(&cmp, velocity_id, strlen(velocity_id));
-        //err = err || !cmp_write_float(&cmp, control_get_velocity());
-        //const char *vel_ctrl_id = "vel_ctrl";
-        //err = err || !cmp_write_str(&cmp, vel_ctrl_id, strlen(vel_ctrl_id));
-        //err = err || !cmp_write_float(&cmp, control_get_vel_ctrl_out());
+        err = err || !cmp_write_float(&cmp, control_get_motor_voltage());
+
         if (!err) {
             serial_datagram_send(dtgrm, cmp_mem_access_get_pos(&mem), _stream_sndfn, stdout);
         }
-        chThdSleepMilliseconds(10);
+        chThdSleepMilliseconds(100);
     }
     return 0;
 }
@@ -219,7 +208,7 @@ int main(void) {
     chThdCreateStatic(parameter_listener_wa, sizeof(parameter_listener_wa), LOWPRIO, parameter_listener, &SD3);
     chThdCreateStatic(led_thread_wa, sizeof(led_thread_wa), LOWPRIO, led_thread, NULL);
 
-    control_enable(true);
+    control_enable(false);
 
     static struct uavcan_node_arg node_arg;
     node_arg.node_id = config.ID;
@@ -227,8 +216,12 @@ int main(void) {
     can_transceiver_activate();
     uavcan_node_start(&node_arg);
 
+    motor_pwm_enable();
 
     while (1) {
-        chThdSleepMilliseconds(1000);
+        chThdSleepMilliseconds(2000);
+        motor_pwm_set(0.1);
+        chThdSleepMilliseconds(2000);
+        motor_pwm_set(-0.1);
     }
 }
