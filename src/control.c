@@ -312,7 +312,7 @@ static THD_FUNCTION(control_loop, arg)
             // run control step
             pid_cascade_control(&ctrl);
 
-            set_motor_voltage(ctrl.motor_voltage);
+            //set_motor_voltage(ctrl.motor_voltage);
         }
 
         chEvtWaitAny(CONTROL_WAKEUP_EVENT);

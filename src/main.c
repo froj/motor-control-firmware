@@ -40,10 +40,10 @@ static THD_FUNCTION(stream_task, arg)
         err = err || !cmp_write_map(&cmp, 2);
         const char *enc_id = "I";
         err = err || !cmp_write_str(&cmp, enc_id, strlen(enc_id));
-        err = err || !cmp_write_u32(&cmp, analog_get_motor_current());
+        err = err || !cmp_write_float(&cmp, control_get_current());
         const char *pos_id = "U";
         err = err || !cmp_write_str(&cmp, pos_id, strlen(pos_id));
-        err = err || !cmp_write_float(&cmp, control_get_motor_voltage());
+        err = err || !cmp_write_float(&cmp, analog_get_battery_voltage());
 
         if (!err) {
             serial_datagram_send(dtgrm, cmp_mem_access_get_pos(&mem), _stream_sndfn, stdout);
@@ -208,7 +208,7 @@ int main(void) {
     chThdCreateStatic(parameter_listener_wa, sizeof(parameter_listener_wa), LOWPRIO, parameter_listener, &SD3);
     chThdCreateStatic(led_thread_wa, sizeof(led_thread_wa), LOWPRIO, led_thread, NULL);
 
-    control_enable(false);
+    control_enable(true);
 
     static struct uavcan_node_arg node_arg;
     node_arg.node_id = config.ID;
@@ -216,12 +216,10 @@ int main(void) {
     can_transceiver_activate();
     uavcan_node_start(&node_arg);
 
-    motor_pwm_enable();
-
     while (1) {
         chThdSleepMilliseconds(2000);
-        motor_pwm_set(0.1);
+        motor_pwm_set(0.2);
         chThdSleepMilliseconds(2000);
-        motor_pwm_set(-0.1);
+        motor_pwm_set(-0.2);
     }
 }
